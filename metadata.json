@@ -1,0 +1,5 @@
+{
+  "name": "Pigeon Pool Online",
+  "description": "A real-time multiplayer 8-ball pool game replica. Play with friends in turn-based matches with realistic physics.",
+  "requestFramePermissions": []
+}
