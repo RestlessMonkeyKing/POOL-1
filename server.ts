@@ -18,8 +18,22 @@ async function startServer() {
   // Room state storage
   const rooms = new Map<string, any>();
 
+  const broadcastLobbyUpdate = () => {
+    const availableRooms: any[] = [];
+    for (const [roomId, room] of rooms.entries()) {
+      if (room.players.length === 1) {
+        availableRooms.push({ roomId, players: room.players.length });
+      }
+    }
+    io.emit("lobby-update", {
+      onlineCount: io.engine.clientsCount,
+      rooms: availableRooms
+    });
+  };
+
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
+    broadcastLobbyUpdate();
 
     socket.on("join-room", (roomId) => {
       socket.join(roomId);
@@ -33,7 +47,7 @@ async function startServer() {
         });
       } else {
         const room = rooms.get(roomId);
-        if (room.players.length < 2) {
+        if (room.players.length < 2 && !room.players.includes(socket.id)) {
           room.players.push(socket.id);
           room.gameState = "playing";
           io.to(roomId).emit("game-start", {
@@ -42,6 +56,7 @@ async function startServer() {
           });
         }
       }
+      broadcastLobbyUpdate();
     });
 
     socket.on("shot", (data) => {
@@ -71,6 +86,7 @@ async function startServer() {
           }
         }
       }
+      broadcastLobbyUpdate();
     });
   });
 
